@@ -1,9 +1,12 @@
 import { useTasks } from "@/contexts/TaskContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useEffect } from "react";
 
 export default function AuditLogsPage() {
-  const { auditLog } = useTasks();
+  const { auditLog, fetchAuditLogs } = useTasks();
+
+  useEffect(() => { fetchAuditLogs(); }, [fetchAuditLogs]);
 
   return (
     <div className="space-y-4">
