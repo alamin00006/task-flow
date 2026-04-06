@@ -1,16 +1,12 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { api } from "@/lib/api";
 import type { User } from "@/types";
-
-const MOCK_USERS: User[] = [
-  { id: "u1", name: "Alice Admin", email: "alice@example.com", role: "admin" },
-  { id: "u2", name: "Bob User", email: "bob@example.com", role: "user" },
-  { id: "u3", name: "Carol User", email: "carol@example.com", role: "user" },
-];
 
 interface AuthContextType {
   user: User | null;
   users: User[];
-  login: (email: string, password: string) => boolean;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -18,20 +14,49 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const login = useCallback((email: string, _password: string) => {
-    const found = MOCK_USERS.find((u) => u.email === email);
-    if (found) {
-      setUser(found);
-      return true;
+  // Restore session from stored token on mount
+  useEffect(() => {
+    const token = api.getToken();
+    if (token) {
+      api.getProfile()
+        .then((profile) => {
+          setUser(profile as User);
+          return api.getUsers();
+        })
+        .then(setUsers)
+        .catch(() => {
+          api.setToken(null);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-    return false;
   }, []);
 
-  const logout = useCallback(() => setUser(null), []);
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { access_token, user: userData } = await api.login(email, password);
+      api.setToken(access_token);
+      setUser(userData as User);
+      const allUsers = await api.getUsers();
+      setUsers(allUsers as User[]);
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    api.setToken(null);
+    setUser(null);
+    setUsers([]);
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, users: MOCK_USERS, login, logout }}>
+    <AuthContext.Provider value={{ user, users, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
