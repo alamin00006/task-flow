@@ -2,21 +2,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTasks } from "@/contexts/TaskContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TaskStatus } from "@/types";
+import { useEffect } from "react";
 
 const STATUSES: TaskStatus[] = ["To Do", "In Progress", "In Review", "Done"];
 
-const statusColors: Record<TaskStatus, string> = {
-  "To Do": "bg-muted text-muted-foreground",
-  "In Progress": "bg-primary/10 text-primary",
-  "In Review": "bg-accent text-accent-foreground",
-  "Done": "bg-secondary text-secondary-foreground",
-};
-
 export default function DashboardHome() {
   const { user } = useAuth();
-  const { tasks } = useTasks();
+  const { tasks, fetchTasks, fetchMyTasks } = useTasks();
 
-  const relevantTasks = user?.role === "admin" ? tasks : tasks.filter((t) => t.assigneeId === user?.id);
+  useEffect(() => {
+    if (user?.role === "admin") fetchTasks();
+    else fetchMyTasks();
+  }, [user, fetchTasks, fetchMyTasks]);
 
   return (
     <div className="space-y-6">
@@ -29,7 +26,7 @@ export default function DashboardHome() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {STATUSES.map((status) => {
-          const count = relevantTasks.filter((t) => t.status === status).length;
+          const count = tasks.filter((t) => t.status === status).length;
           return (
             <Card key={status}>
               <CardHeader className="pb-2">
@@ -48,7 +45,7 @@ export default function DashboardHome() {
           <CardTitle className="text-lg">Total Tasks</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-4xl font-bold text-foreground">{relevantTasks.length}</div>
+          <div className="text-4xl font-bold text-foreground">{tasks.length}</div>
         </CardContent>
       </Card>
     </div>

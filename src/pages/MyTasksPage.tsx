@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { TaskStatus, TaskPriority } from "@/types";
+import { useEffect } from "react";
 
 const STATUSES: TaskStatus[] = ["To Do", "In Progress", "In Review", "Done"];
 
@@ -22,18 +23,18 @@ const statusStyle: Record<TaskStatus, string> = {
 
 export default function MyTasksPage() {
   const { user } = useAuth();
-  const { tasks, updateTaskStatus } = useTasks();
+  const { tasks, fetchMyTasks, updateTaskStatus } = useTasks();
 
-  const myTasks = tasks.filter((t) => t.assigneeId === user?.id);
+  useEffect(() => { fetchMyTasks(); }, [fetchMyTasks]);
 
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-foreground">My Tasks</h2>
-      {myTasks.length === 0 && (
+      {tasks.length === 0 && (
         <p className="text-muted-foreground">No tasks assigned to you.</p>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        {myTasks.map((task) => (
+        {tasks.map((task) => (
           <Card key={task.id}>
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-2">
@@ -51,7 +52,7 @@ export default function MyTasksPage() {
                 <label className="text-xs font-medium text-muted-foreground">Update Status</label>
                 <Select
                   value={task.status}
-                  onValueChange={(val) => updateTaskStatus(task.id, val as TaskStatus, user!.id, user!.name)}
+                  onValueChange={(val) => updateTaskStatus(task.id, val as TaskStatus)}
                 >
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
