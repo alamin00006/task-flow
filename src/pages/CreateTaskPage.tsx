@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { TaskPriority, TaskStatus } from "@/types";
+import type { TaskPriority } from "@/types";
 
 export default function CreateTaskPage() {
-  const { user, users } = useAuth();
+  const { users } = useAuth();
   const { createTask } = useTasks();
   const navigate = useNavigate();
 
@@ -21,13 +21,10 @@ export default function CreateTaskPage() {
   const [assigneeId, setAssigneeId] = useState("");
   const [dueDate, setDueDate] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !assigneeId || !dueDate) return;
-    createTask(
-      { title, description, priority, assigneeId, dueDate, status: "To Do" as TaskStatus, createdBy: user!.id },
-      user!.name
-    );
+    await createTask({ title, description, priority, assigneeId, dueDate });
     navigate("/dashboard/tasks");
   };
 

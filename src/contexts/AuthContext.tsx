@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(profile as User);
           return api.getUsers();
         })
-        .then(setUsers)
+        .then((u) => setUsers(u as User[]))
         .catch(() => {
           api.setToken(null);
         })

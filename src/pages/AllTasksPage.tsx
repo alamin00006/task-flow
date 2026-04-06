@@ -1,9 +1,10 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { useTasks } from "@/contexts/TaskContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { TaskStatus, TaskPriority } from "@/types";
+import { useEffect } from "react";
 
 const priorityVariant: Record<TaskPriority, "default" | "secondary" | "destructive"> = {
   Low: "secondary",
@@ -19,8 +20,10 @@ const statusStyle: Record<TaskStatus, string> = {
 };
 
 export default function AllTasksPage() {
-  const { user, users } = useAuth();
-  const { tasks, assignTask } = useTasks();
+  const { users } = useAuth();
+  const { tasks, fetchTasks, assignTask } = useTasks();
+
+  useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
   const getUserName = (id: string) => users.find((u) => u.id === id)?.name ?? "Unknown";
 
@@ -51,10 +54,7 @@ export default function AllTasksPage() {
                 <TableCell>
                   <Select
                     value={task.assigneeId}
-                    onValueChange={(val) => {
-                      const assignee = users.find((u) => u.id === val);
-                      assignTask(task.id, val, user!.id, user!.name, assignee?.name ?? "");
-                    }}
+                    onValueChange={(val) => assignTask(task.id, val)}
                   >
                     <SelectTrigger className="w-36 h-8 text-xs">
                       <SelectValue />
